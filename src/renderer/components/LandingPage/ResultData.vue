@@ -72,7 +72,6 @@ export default {
   },
   computed: {
     statsOrdered() {
-      // this.stats = []
       let stats = this.stats
       if (this.filter !== '') {
         stats = stats.filter(stat => {
@@ -86,7 +85,6 @@ export default {
         if (a.value.ok + a.value.ko > b.value.ok + b.value.ko) {
           return -1
         }
-        // a must be equal to b
         return 0
       })
     }

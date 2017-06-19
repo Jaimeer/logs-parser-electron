@@ -148,8 +148,7 @@ export default {
 
     const folderData = getDataFolder()
     if (!fs.existsSync(folderData)) {
-      console.log('AAA', folderData)
-      fs.mkdirSync(folderData)
+      fs.mkdirpSync(folderData)
     }
     const hash = (+new Date()).toString(36)
     fs.writeFile(`${folderData}/data_${hash}.json`, JSON.stringify(items), function (err) {

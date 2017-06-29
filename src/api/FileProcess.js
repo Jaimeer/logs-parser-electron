@@ -1,19 +1,30 @@
 const fs = require('fs-extra')
+const zlib = require('zlib')
 const readline = require('readline')
 const {
   remote
 } = require('electron')
 
 function processFile(file, items) {
-  var lineReader = readline.createInterface({
-    input: fs.createReadStream(file)
-  })
+  let lineReader = null
+
+  if (file.indexOf('.gz') > 0) {
+    console.log('Is .GZ')
+    lineReader = readline.createInterface({
+      input: fs.createReadStream(file).pipe(zlib.createGunzip())
+    })
+  } else {
+    console.log('Is not zipped')
+    lineReader = readline.createInterface({
+      input: fs.createReadStream(file)
+    })
+  }
 
   let linesProcessed = 0
   lineReader.on('line', (line) => {
     processLine(line, items, file)
     linesProcessed++
-    if (!(linesProcessed % 10000)) {
+    if (!(linesProcessed % 100000)) {
       console.log(`File[${file}] NumLines[${linesProcessed}]`)
     }
   })
@@ -34,7 +45,6 @@ function processLine(line, items, file) {
 
   if (host !== '') {
     let item = items[host]
-    const extendData = false
 
     if (item) {
       if (status) {
@@ -42,26 +52,24 @@ function processLine(line, items, file) {
       } else {
         item.value.ko += 1
       }
-      if (extendData) {
-        if (item.dates[day]) {
-          if (item.dates[day][hour]) {
-            if (status) {
-              item.dates[day][hour].ok += 1
-            } else {
-              item.dates[day][hour].ko += 1
-            }
+      if (item.dates[day]) {
+        if (item.dates[day][hour]) {
+          if (status) {
+            item.dates[day][hour].ok += 1
           } else {
-            item.dates[day][hour] = {
-              ok: status ? 1 : 0,
-              ko: status ? 0 : 1
-            }
+            item.dates[day][hour].ko += 1
           }
         } else {
-          item.dates[day] = {}
           item.dates[day][hour] = {
             ok: status ? 1 : 0,
             ko: status ? 0 : 1
           }
+        }
+      } else {
+        item.dates[day] = {}
+        item.dates[day][hour] = {
+          ok: status ? 1 : 0,
+          ko: status ? 0 : 1
         }
       }
     } else {
@@ -70,18 +78,16 @@ function processLine(line, items, file) {
         ko: status ? 0 : 1
       }
       let dates = {}
-
-      if (extendData) {
-        if (!dates[day]) {
-          dates[day] = {}
-        }
-        if (!dates[day][hour]) {
-          dates[day][hour] = {
-            ok: status ? 1 : 0,
-            ko: status ? 0 : 1
-          }
+      if (!dates[day]) {
+        dates[day] = {}
+      }
+      if (!dates[day][hour]) {
+        dates[day][hour] = {
+          ok: status ? 1 : 0,
+          ko: status ? 0 : 1
         }
       }
+
       items[host] = {
         host,
         dates: dates,

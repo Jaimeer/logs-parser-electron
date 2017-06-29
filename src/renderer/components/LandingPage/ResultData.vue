@@ -47,7 +47,7 @@
           </tr>
         </tfoot>
         <tbody>
-          <tr v-for="stat in statsOrdered">
+          <tr v-for="(stat, index) in statsOrdered">
             <td>{{stat.value.ok + stat.value.ko}}</td>
             <td>{{stat.value.ok}}</td>
             <td>{{stat.value.ko}}</td>
@@ -73,12 +73,14 @@ export default {
   computed: {
     statsOrdered() {
       let stats = this.stats
+      // Filter
       if (this.filter !== '') {
         stats = stats.filter(stat => {
           return stat.host.toLowerCase().indexOf(this.filter.toLowerCase()) > 0
         })
       }
-      return stats.sort(function (a, b) {
+      // Sort
+      stats = stats.sort(function (a, b) {
         if (a.value.ok + a.value.ko < b.value.ok + b.value.ko) {
           return 1
         }
@@ -87,6 +89,10 @@ export default {
         }
         return 0
       })
+      // Limit
+      stats = stats.slice(0, 200)
+
+      return stats
     }
   },
   methods: {

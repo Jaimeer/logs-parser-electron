@@ -34,6 +34,7 @@ function processLine(line, items, file) {
 
   if (host !== '') {
     let item = items[host]
+    const extendData = false
 
     if (item) {
       if (status) {
@@ -41,24 +42,26 @@ function processLine(line, items, file) {
       } else {
         item.value.ko += 1
       }
-      if (item.dates[day]) {
-        if (item.dates[day][hour]) {
-          if (status) {
-            item.dates[day][hour].ok += 1
+      if (extendData) {
+        if (item.dates[day]) {
+          if (item.dates[day][hour]) {
+            if (status) {
+              item.dates[day][hour].ok += 1
+            } else {
+              item.dates[day][hour].ko += 1
+            }
           } else {
-            item.dates[day][hour].ko += 1
+            item.dates[day][hour] = {
+              ok: status ? 1 : 0,
+              ko: status ? 0 : 1
+            }
           }
         } else {
+          item.dates[day] = {}
           item.dates[day][hour] = {
             ok: status ? 1 : 0,
             ko: status ? 0 : 1
           }
-        }
-      } else {
-        item.dates[day] = {}
-        item.dates[day][hour] = {
-          ok: status ? 1 : 0,
-          ko: status ? 0 : 1
         }
       }
     } else {
@@ -67,16 +70,18 @@ function processLine(line, items, file) {
         ko: status ? 0 : 1
       }
       let dates = {}
-      if (!dates[day]) {
-        dates[day] = {}
-      }
-      if (!dates[day][hour]) {
-        dates[day][hour] = {
-          ok: status ? 1 : 0,
-          ko: status ? 0 : 1
+
+      if (extendData) {
+        if (!dates[day]) {
+          dates[day] = {}
+        }
+        if (!dates[day][hour]) {
+          dates[day][hour] = {
+            ok: status ? 1 : 0,
+            ko: status ? 0 : 1
+          }
         }
       }
-
       items[host] = {
         host,
         dates: dates,
